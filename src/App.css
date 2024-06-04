@@ -48,6 +48,7 @@
   margin-bottom: 10px;
   margin-right: 10px;
   display: flex;
+  border-radius: 4px;
 }
 
 .modal-box{
@@ -157,3 +158,4 @@
 .element-icon{
   margin-right: 8px;
 }
+

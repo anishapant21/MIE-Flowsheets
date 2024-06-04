@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ConnectDragSource, DragSource, DragSourceConnector } from 'react-dnd';
 import { TreeItem, changeNodeAtPath, insertNode, removeNode } from '@nosferatu500/react-sortable-tree';
 import { SortableTreeWithoutDndContext as SortableTree } from '@nosferatu500/react-sortable-tree';
@@ -19,6 +19,9 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   const [updatedTreeData, setUpdatedTreeData] = useState<TreeItem[]>(treeData);
   const [editValue, setEditValue] = useState<string>("");
 
+  const [onClickedItems, setOnClickedItems] = useState<TreeItem[]>([]);
+  const treeContainerRef = useRef<HTMLDivElement>(null);
+
   const newNodeLinkId = 'NEW';
   const externalNodeType = 'yourNodeType';
 
@@ -29,8 +32,21 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     }
   }, [treeData]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (treeContainerRef.current && !treeContainerRef.current.contains(event.target as HTMLElement)) {
+        setOnClickedItems([]);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
   const handleOpenModal = (node: Node, treeData: Node[]) => {
-    // Check if the node is new or already exists
     if (node.title === 'NEW') {
       setCurrentNode(node);
       setIsModalOpen(true);
@@ -136,6 +152,16 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     );
   };
 
+  const handleNodeClick = (node: TreeItem) => {
+    setOnClickedItems((prev) => {
+      if (prev.includes(node)) {
+        return prev.filter(item => item !== node);
+      } else {
+        return [...prev, node];
+      }
+    });
+  }
+
   const YourExternalNodeComponent = DragSource(
     externalNodeType,
     externalNodeSpec,
@@ -176,8 +202,12 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   const handleOnSettings = (node : Node, path : number[]) =>{
     setCurrentNode(node);
     setIsModalOpen(true);
-    setEditValue(node.title)
-    setCurrentPath(path)
+    setEditValue(node.title);
+    setCurrentPath(path);
+  }
+
+  const isNodeHighlighted = (node : Node) =>{
+    return onClickedItems.includes(node);
   }
 
   return (
@@ -189,16 +219,19 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
         {createTypeComponent(IQuestionnaireItemType.url, 'URL')}
       </div>
 
-      <div className='sortable-tree-container'>
+      <div className='sortable-tree-container' ref={treeContainerRef}>
         <SortableTree
           dndType={externalNodeType}
           treeData={treeData}
-          onChange={() => { }}
+          onChange={(node) => { console.log(node)}}
           onMoveNode={({ treeData, node }: NodeMoveEvent) => {
             handleOpenModal(node, treeData);
             setUpdatedTreeData(treeData);
           }}
           generateNodeProps={({node, path}) => ({
+            onClick: () => {
+              handleNodeClick(node);
+            },  
             className: `anchor-menu__item`,
             title: (
               <div className="anchor-menu__inneritem" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -208,23 +241,22 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
             ),
             buttons: [
               <>
-                <button onClick={() => handleOnDuplicate(node, path)}  className='icon-btn'>
+                <button onClick={() => handleOnDuplicate(node, path)} className='icon-btn'>
                   <i className="bi bi-copy"></i>
                 </button>
                 <button onClick={() => handleOnDelete(path)} className='icon-btn'>
                   <i className="bi bi-trash3"></i>
                 </button>
-                <button onClick = {() => handleOnSettings(node, path)} className='icon-btn'>
-                <i className="bi bi-gear"></i>
+                <button onClick={() => handleOnSettings(node, path)} className='icon-btn'>
+                  <i className="bi bi-gear"></i>
                 </button>
-               
               </>
-            ]
+            ],
+            style: isNodeHighlighted(node) ? { border: "2px solid #1a67a0" } : {}
           })}
         />
       </div>
-
-      <InputModal isOpen={isModalOpen} onClose={handleCloseModal} onSave={handleSaveLabel} initialValue={editValue}/>
+      <InputModal isOpen={isModalOpen} onClose={handleCloseModal} onSave={handleSaveLabel} initialValue={editValue} />
     </div>
   );
 };
