@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ConnectDragSource, DragSource, DragSourceConnector } from 'react-dnd';
 import { TreeItem, changeNodeAtPath, insertNode, removeNode } from '@nosferatu500/react-sortable-tree';
 import { SortableTreeWithoutDndContext as SortableTree } from '@nosferatu500/react-sortable-tree';
@@ -18,6 +18,9 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   const [currentPath, setCurrentPath] = useState<number[] | null>(null);
   const [updatedTreeData, setUpdatedTreeData] = useState<TreeItem[]>(treeData);
   const [editValue, setEditValue] = useState<string>("");
+  const treeContainerRef = useRef<HTMLDivElement>(null);
+
+  const [selectedNodes, setSelectedNodes] = useState<{ node: Node, path: number[] }[]>([]);
 
   const newNodeLinkId = 'NEW';
   const externalNodeType = 'yourNodeType';
@@ -29,14 +32,92 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     }
   }, [treeData]);
 
-  const handleOpenModal = (node: Node, treeData: Node[]) => {
-    // Check if the node is new or already exists
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (treeContainerRef.current && !treeContainerRef.current.contains(event.target as HTMLElement)) {
+        setSelectedNodes([]);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
+  const handleOpenModal = (node: Node, treeData: Node[], nextTreeIndex: number) => {
     if (node.title === 'NEW') {
       setCurrentNode(node);
       setIsModalOpen(true);
     } else {
+      // From here call the function that moves the nodes.
+      if(selectedNodes.length > 1){
+        // next treeIndex is where it is dropped
+    
+        handleMultipleMove(node, treeData, nextTreeIndex)
+        return;
+      }
       setTreeData(treeData)
     }
+    setUpdatedTreeData(treeData)
+  };
+
+  const handleMultipleMove = (node: Node, treeData: TreeItem[], nextTreeIndex: number) => {
+    let newTreeData = [...updatedTreeData];
+  
+    // Sort selected nodes by their path in descending order
+    const sortedSelectedNodes = [...selectedNodes].sort((a, b) => {
+      for (let i = 0; i < a.path.length; i++) {
+        if (a.path[i] !== b.path[i]) {
+          return b.path[i] - a.path[i];
+        }
+      }
+      return 0;
+    });
+  
+    // Remove all selected nodes from their original positions
+    sortedSelectedNodes.forEach(({ node, path }) => {
+      const result = removeNode({
+        treeData: newTreeData,
+        path,
+        getNodeKey: ({ treeIndex }) => treeIndex,
+      });
+  
+      if (result && result.treeData) {
+        newTreeData = result.treeData;
+      }
+    });
+
+    // Insert selected items in the dropped position
+    const sortedSelectedNodesForInsertion = [...selectedNodes].sort((a, b) => {
+      for (let i = 0; i < a.path.length; i++) {
+        if (a.path[i] !== b.path[i]) {
+          return a.path[i] - b.path[i];
+        }
+      }
+      return 0;
+    });
+
+  
+    // Insert each node into the new position
+    sortedSelectedNodesForInsertion.forEach(({ node }, index) => {
+      const result = insertNode({
+        treeData: newTreeData,
+        newNode: node,
+        depth: 0,
+        minimumTreeIndex: nextTreeIndex + index,
+        getNodeKey: ({ treeIndex }) => treeIndex,
+      });
+  
+      if (result && result.treeData) {
+        newTreeData = result.treeData;
+      }
+    });
+  
+    setTreeData(newTreeData);
+    setUpdatedTreeData(newTreeData)
+    setSelectedNodes([])
   };
 
   const handleCloseModal = () => {
@@ -54,6 +135,9 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
         newNode: { ...currentNode, title: label },
       });
       setTreeData(newTreeData);
+
+      // Updating this so that updatedTreeData is updated with treeData once saved
+      setUpdatedTreeData(newTreeData)
     } else if(currentNode){
       const newTreeData = updatedTreeData.map((node) => {
         if (node.title === currentNode.title) {
@@ -62,6 +146,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
         return node;
       });
       setTreeData(newTreeData);
+      setUpdatedTreeData(newTreeData)
     }
     handleCloseModal();
   };
@@ -159,6 +244,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   interface NodeMoveEvent {
     treeData: Node[];
     node: Node;
+    nextTreeIndex : number
   }
 
   const handleOnDelete = (path: number[]) =>{
@@ -176,8 +262,30 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   const handleOnSettings = (node : Node, path : number[]) =>{
     setCurrentNode(node);
     setIsModalOpen(true);
-    setEditValue(node.title)
-    setCurrentPath(path)
+    setEditValue(node.title);
+    setCurrentPath(path);
+  }
+
+  const isNodeHighlighted = (node: TreeItem, path: number[]) => {
+    return selectedNodes.some(
+      (item) => item.node === node && JSON.stringify(item.path) === JSON.stringify(path)
+    );
+  }  
+
+  const handleOnMoveNode = (node : Node, path : number[]) =>{
+    setSelectedNodes((prev) => {
+      const nodeExists = prev.some(
+        (item) => item.node === node
+      );
+  
+      if (nodeExists) {
+        return prev.filter(
+          (item) => item.node !== node || JSON.stringify(item.path) !== JSON.stringify(path)
+        );
+      } else {
+        return [...prev, { node, path }];
+      }
+    });
   }
 
   return (
@@ -189,16 +297,18 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
         {createTypeComponent(IQuestionnaireItemType.url, 'URL')}
       </div>
 
-      <div className='sortable-tree-container'>
+      <div className='sortable-tree-container' ref={treeContainerRef}>
         <SortableTree
           dndType={externalNodeType}
           treeData={treeData}
-          onChange={() => { }}
-          onMoveNode={({ treeData, node }: NodeMoveEvent) => {
-            handleOpenModal(node, treeData);
-            setUpdatedTreeData(treeData);
+          onChange={(node) => { console.log(node)}}
+          onMoveNode={({ treeData, node, nextTreeIndex }: NodeMoveEvent) => {
+            handleOpenModal(node, treeData, nextTreeIndex);
           }}
           generateNodeProps={({node, path}) => ({
+            onClick: () => {
+              handleOnMoveNode(node, path)
+            },  
             className: `anchor-menu__item`,
             title: (
               <div className="anchor-menu__inneritem" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -208,23 +318,22 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
             ),
             buttons: [
               <>
-                <button onClick={() => handleOnDuplicate(node, path)}  className='icon-btn'>
+                <button onClick={() => handleOnDuplicate(node, path)} className='icon-btn'>
                   <i className="bi bi-copy"></i>
                 </button>
                 <button onClick={() => handleOnDelete(path)} className='icon-btn'>
                   <i className="bi bi-trash3"></i>
                 </button>
-                <button onClick = {() => handleOnSettings(node, path)} className='icon-btn'>
-                <i className="bi bi-gear"></i>
+                <button onClick={() => handleOnSettings(node, path)} className='icon-btn'>
+                  <i className="bi bi-gear"></i>
                 </button>
-               
               </>
-            ]
+            ],
+            style: isNodeHighlighted(node, path) ? { border: "2px solid #1a67a0" } : {}
           })}
         />
       </div>
-
-      <InputModal isOpen={isModalOpen} onClose={handleCloseModal} onSave={handleSaveLabel} initialValue={editValue}/>
+      <InputModal isOpen={isModalOpen} onClose={handleCloseModal} onSave={handleSaveLabel} initialValue={editValue} />
     </div>
   );
 };

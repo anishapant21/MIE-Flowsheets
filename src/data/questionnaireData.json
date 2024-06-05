@@ -1,0 +1,270 @@
+{
+    "resourceType": "Questionnaire",
+    "language": "nb-NO",
+    "status": "draft",
+    "publisher": "NHN",
+    "meta": {
+      "profile": [
+        "http://ehelse.no/fhir/StructureDefinition/sdf-Questionnaire"
+      ],
+      "tag": [
+        {
+          "system": "urn:ietf:bcp:47",
+          "code": "nb-NO",
+          "display": "Bokmål"
+        }
+      ],
+      "security": [
+        {
+          "code": "3",
+          "display": "Helsehjelp (Full)",
+          "system": "urn:oid:2.16.578.1.12.4.1.1.7618"
+        }
+      ]
+    },
+    "contact": [
+      {
+        "name": "http://www.nhn.no"
+      }
+    ],
+    "subjectType": [
+      "Patient"
+    ],
+    "extension": [
+      {
+        "url": "http://helsenorge.no/fhir/StructureDefinition/sdf-sidebar",
+        "valueCoding": {
+          "system": "http://helsenorge.no/fhir/ValueSet/sdf-sidebar",
+          "code": "1"
+        }
+      },
+      {
+        "url": "http://helsenorge.no/fhir/StructureDefinition/sdf-information-message",
+        "valueCoding": {
+          "system": "http://helsenorge.no/fhir/ValueSet/sdf-information-message",
+          "code": "1"
+        }
+      },
+      {
+        "url": "http://helsenorge.no/fhir/StructureDefintion/sdf-itemControl-visibility",
+        "valueCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://helsenorge.no/fhir/CodeSystem/AttachmentRenderOptions",
+              "code": "hide-help",
+              "display": "Hide help texts"
+            },
+            {
+              "system": "http://helsenorge.no/fhir/CodeSystem/AttachmentRenderOptions",
+              "code": "hide-sublabel",
+              "display": "Hide sublabel texts"
+            }
+          ]
+        }
+      }
+    ],
+    "id": "7f0ea59a-4d64-42d2-8b32-1044c4ec3845",
+    "item": [
+      {
+        "linkId": "e92e7fb4-c75b-46d4-dd39-1adc8e914114",
+        "type": "group",
+        "text": "Basic Information",
+        "required": false,
+        "_text": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/rendering-markdown",
+              "valueMarkdown": "**Basic Information**"
+            }
+          ]
+        }
+      },
+      {
+        "linkId": "a91142e3-0c5c-4f75-867f-71036eef1fed",
+        "type": "string",
+        "text": "Name",
+        "extension": [
+          {
+            "url": "http://ehelse.no/fhir/StructureDefinition/validationtext",
+            "valueString": "Name is required"
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/minLength",
+            "valueInteger": 4
+          }
+        ],
+        "required": true
+      },
+      {
+        "linkId": "db29d0e1-3bb2-4837-c307-9ee31c57db79",
+        "type": "display",
+        "text": "Please read the terms and conditions carefully before you give us permission. Condition 1 Condition 2 Condition 3",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/ValueSet/questionnaire-item-control",
+                  "code": "highlight"
+                }
+              ]
+            }
+          }
+        ],
+        "required": false,
+        "_text": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/rendering-markdown",
+              "valueMarkdown": "_Please read the terms and conditions carefully before you give us permission._\n\n*   Condition 1\n*   Condition 2\n*   Condition 3"
+            }
+          ]
+        }
+      },
+      {
+        "linkId": "af7a1188-a746-4140-8364-457b5311f39c",
+        "type": "choice",
+        "text": "Do you have headache?",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/ValueSet/questionnaire-item-control",
+                  "code": "drop-down"
+                }
+              ]
+            }
+          },
+          {
+            "url": "http://ehelse.no/fhir/StructureDefinition/sdf-optionReference",
+            "valueReference": {
+              "reference": "yes",
+              "display": "Yes",
+              "id": "055df475-56af-4870-813a-bd4d7f00e091"
+            }
+          },
+          {
+            "url": "http://ehelse.no/fhir/StructureDefinition/sdf-optionReference",
+            "valueReference": {
+              "reference": "no",
+              "display": "No",
+              "id": "97fb2ddf-702c-429f-908a-39799d281e21"
+            }
+          }
+        ],
+        "code": [
+          {
+            "system": "http://ehelse.no/fhir/ValueSet/TQQC",
+            "code": "1",
+            "display": "Technical endpoint for receiving QuestionnaireResponse"
+          }
+        ],
+        "required": true
+      },
+      {
+        "linkId": "92294f8f-b7e9-46d8-a35a-89fb49d661f2",
+        "type": "boolean",
+        "text": "I read the terms and conditions and accept it.",
+        "required": true,
+        "enableWhen": [
+          {
+            "question": "af7a1188-a746-4140-8364-457b5311f39c",
+            "operator": "=",
+            "answerReference": {
+              "reference": "yes"
+            }
+          }
+        ]
+      },
+      {
+        "linkId": "e3dbd132-1aee-41a2-8d81-84de2a95e587",
+        "type": "choice",
+        "text": "Do you take medicine frequently?",
+        "required": true,
+        "answerOption": [
+          {
+            "valueCoding": {
+              "id": "21ef4813-c7fc-4eba-80bb-0ca688550410",
+              "code": "yes",
+              "system": "urn:uuid:a8caf453-33ca-4e81-d7a6-a456dffddaac",
+              "display": "Yes"
+            }
+          },
+          {
+            "valueCoding": {
+              "id": "0630022d-7295-47f4-881b-cbddc31311be",
+              "code": "no",
+              "system": "urn:uuid:a8caf453-33ca-4e81-d7a6-a456dffddaac",
+              "display": "No"
+            }
+          }
+        ],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/ValueSet/questionnaire-item-control",
+                  "code": "radio-button"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "linkId": "c64a7fad-e290-4a46-e10c-0ab1898d113f",
+        "type": "dateTime",
+        "text": "Last time you had headache this month.",
+        "required": true,
+        "extension": [
+          {
+            "url": "http://ehelse.no/fhir/StructureDefinition/sdf-maxvalue",
+            "valueString": "today()"
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+            "valueDate": "2024-05-01"
+          }
+        ]
+      },
+      {
+        "linkId": "02b009f1-1ed7-454a-fa45-797bf40975a9",
+        "type": "time",
+        "text": "What time do you sleep?",
+        "required": true
+      },
+      {
+        "linkId": "b99513cb-60d9-4fa4-8a5a-f564eba6442a",
+        "type": "integer",
+        "text": "How old are you?",
+        "required": true,
+        "extension": [
+          {
+            "url": "http://ehelse.no/fhir/StructureDefinition/validationtext",
+            "valueString": "Enter your age"
+          }
+        ]
+      },
+      {
+        "linkId": "7de73ac7-3845-49b5-86e9-ca5d6fdd4f00",
+        "type": "quantity",
+        "text": "What is your weight?",
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-unit",
+            "valueCoding": {
+              "code": "kg",
+              "display": "kilo",
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "required": true
+      }
+    ]
+  }
