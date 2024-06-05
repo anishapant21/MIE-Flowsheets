@@ -18,8 +18,6 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   const [currentPath, setCurrentPath] = useState<number[] | null>(null);
   const [updatedTreeData, setUpdatedTreeData] = useState<TreeItem[]>(treeData);
   const [editValue, setEditValue] = useState<string>("");
-
-  const [onClickedItems, setOnClickedItems] = useState<TreeItem[]>([]);
   const treeContainerRef = useRef<HTMLDivElement>(null);
 
   const [selectedNodes, setSelectedNodes] = useState<{ node: Node, path: number[] }[]>([]);
@@ -37,7 +35,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (treeContainerRef.current && !treeContainerRef.current.contains(event.target as HTMLElement)) {
-        setOnClickedItems([]);
+        setSelectedNodes([]);
       }
     };
 
@@ -54,16 +52,15 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
       setIsModalOpen(true);
     } else {
       // From here call the function that moves the nodes.
-     
       if(selectedNodes.length > 1){
         // next treeIndex is where it is dropped
-        console.log(node, treeData, nextTreeIndex)
+    
         handleMultipleMove(node, treeData, nextTreeIndex)
         return;
       }
-
       setTreeData(treeData)
     }
+    setUpdatedTreeData(treeData)
   };
 
   const handleMultipleMove = (node: Node, treeData: TreeItem[], nextTreeIndex: number) => {
@@ -91,9 +88,36 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
         newTreeData = result.treeData;
       }
     });
+
+    // Insert selected items in the dropped position
+    const sortedSelectedNodesForInsertion = [...selectedNodes].sort((a, b) => {
+      for (let i = 0; i < a.path.length; i++) {
+        if (a.path[i] !== b.path[i]) {
+          return a.path[i] - b.path[i];
+        }
+      }
+      return 0;
+    });
+
   
-    // Update the state with the new tree data
+    // Insert each node into the new position
+    sortedSelectedNodesForInsertion.forEach(({ node }, index) => {
+      const result = insertNode({
+        treeData: newTreeData,
+        newNode: node,
+        depth: 0,
+        minimumTreeIndex: nextTreeIndex + index,
+        getNodeKey: ({ treeIndex }) => treeIndex,
+      });
+  
+      if (result && result.treeData) {
+        newTreeData = result.treeData;
+      }
+    });
+  
     setTreeData(newTreeData);
+    setUpdatedTreeData(newTreeData)
+    setSelectedNodes([])
   };
 
   const handleCloseModal = () => {
@@ -111,6 +135,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
         newNode: { ...currentNode, title: label },
       });
       setTreeData(newTreeData);
+
       // Updating this so that updatedTreeData is updated with treeData once saved
       setUpdatedTreeData(newTreeData)
     } else if(currentNode){
@@ -196,16 +221,6 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     );
   };
 
-  const handleNodeClick = (node: TreeItem) => {
-    setOnClickedItems((prev) => {
-      if (prev.includes(node)) {
-        return prev.filter(item => item !== node);
-      } else {
-        return [...prev, node];
-      }
-    });
-  }
-
   const YourExternalNodeComponent = DragSource(
     externalNodeType,
     externalNodeSpec,
@@ -289,11 +304,9 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
           onChange={(node) => { console.log(node)}}
           onMoveNode={({ treeData, node, nextTreeIndex }: NodeMoveEvent) => {
             handleOpenModal(node, treeData, nextTreeIndex);
-            setUpdatedTreeData(treeData);
           }}
           generateNodeProps={({node, path}) => ({
             onClick: () => {
-              // handleNodeClick(node);
               handleOnMoveNode(node, path)
             },  
             className: `anchor-menu__item`,
