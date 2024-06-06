@@ -49,6 +49,7 @@
   margin-right: 10px;
   display: flex;
   border-radius: 4px;
+  position: relative;
 }
 
 .modal-box{
@@ -159,3 +160,15 @@
   margin-right: 8px;
 }
 
+.plus-icon{
+  position: absolute;
+  top: -0.6em;
+  left: 7em;
+}
+
+  .selectedHighlight{
+    .rst__rowContents{
+      background-color: aliceblue;
+
+    }    
+  }
