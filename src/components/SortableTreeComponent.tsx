@@ -6,6 +6,7 @@ import { SortableTreeWithoutDndContext as SortableTree } from '@nosferatu500/rea
 import InputModal from './InputModalComponent';
 
 import { IQuestionnaireItemType, Node } from '../types/types';
+import { insertNodeAtPosition } from '../utils/treeHandler';
 
 interface SortableTreeProps {
   treeData: TreeItem[];
@@ -46,7 +47,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     };
   }, []);
 
-  const handleOpenModal = (node: Node, treeData: Node[], nextTreeIndex: number) => {
+  const handleOpenModal = (node: Node, treeData: TreeItem[], nextTreeIndex: number) => {
     if (node.title === 'NEW') {
       setCurrentNode(node);
       setIsModalOpen(true);
@@ -204,6 +205,13 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
 
   }
 
+  const handleOnAddElementClick = (node : Node) =>{
+   const result = insertNodeAtPosition(node, treeData, treeData.length)
+   if(result){
+    handleOpenModal(node, result, 0)
+   }
+  }
+
   const externalNodeSpec = {
     beginDrag: (componentProps: { node: Node }) => ({ node: { ...componentProps.node } }),
   };
@@ -214,7 +222,8 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
 
   const ExternalNodeBaseComponent = (props: { connectDragSource: ConnectDragSource; node: Node }): JSX.Element | null => {
     return props.connectDragSource(
-      <div className="anchor-menu__dragcomponent">{getIcon(props?.node?.nodeType)} <span>{props?.node?.nodeReadableType}</span></div>,
+      <div className="anchor-menu__dragcomponent">{getIcon(props?.node?.nodeType)} <span>{props?.node?.nodeReadableType}</span>
+     <div className='plus-icon' onClick = {() => {handleOnAddElementClick(props?.node)}}><i className="bi bi-plus-circle "></i></div> </div>,
       {
         dropEffect: 'copy',
       }
@@ -272,7 +281,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     );
   }  
 
-  const handleOnMoveNode = (node : Node, path : number[]) =>{
+  const handleOnNodeClick = (node : Node, path : number[]) =>{
     setSelectedNodes((prev) => {
       const nodeExists = prev.some(
         (item) => item.node === node
@@ -307,9 +316,9 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
           }}
           generateNodeProps={({node, path}) => ({
             onClick: () => {
-              handleOnMoveNode(node, path)
+              handleOnNodeClick(node, path)
             },  
-            className: `anchor-menu__item`,
+            className: `anchor-menu__item ${isNodeHighlighted(node, path)? "selectedHighlight" : ""}`,
             title: (
               <div className="anchor-menu__inneritem" style={{ display: 'flex', flexDirection: 'column' }}>
                 <label>{node.title}</label>
@@ -329,7 +338,6 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
                 </button>
               </>
             ],
-            style: isNodeHighlighted(node, path) ? { border: "2px solid #1a67a0" } : {}
           })}
         />
       </div>
