@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ConnectDragSource, DragSource, DragSourceConnector } from 'react-dnd';
-import { TreeItem, changeNodeAtPath, insertNode, removeNode } from '@nosferatu500/react-sortable-tree';
+import { TreeItem, changeNodeAtPath, insertNode, removeNode, getNodeAtPath } from '@nosferatu500/react-sortable-tree';
 import { SortableTreeWithoutDndContext as SortableTree } from '@nosferatu500/react-sortable-tree';
 
 import InputModal from './InputModalComponent';
@@ -20,6 +20,9 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   const [updatedTreeData, setUpdatedTreeData] = useState<TreeItem[]>(treeData);
   const [editValue, setEditValue] = useState<string>("");
   const treeContainerRef = useRef<HTMLDivElement>(null);
+
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+
 
   const [selectedNodes, setSelectedNodes] = useState<{ node: Node, path: number[] }[]>([]);
 
@@ -281,21 +284,48 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     );
   }  
 
-  const handleOnNodeClick = (node : Node, path : number[]) =>{
-    setSelectedNodes((prev) => {
-      const nodeExists = prev.some(
-        (item) => item.node === node
-      );
+
+  const handleOnNodeClick = (event: React.MouseEvent, node: Node, path: number[], treeIndex: number) => {
+    // select multiple nodes by clicking on shift and node
+    if (event.shiftKey && lastSelectedIndex !== null) {
+      // Select range of nodes between lastSelectedIndex and treeIndex
+      const startIndex = Math.min(lastSelectedIndex, treeIndex);
+      const endIndex = Math.max(lastSelectedIndex, treeIndex);
   
-      if (nodeExists) {
-        return prev.filter(
-          (item) => item.node !== node || JSON.stringify(item.path) !== JSON.stringify(path)
-        );
-      } else {
-        return [...prev, { node, path }];
+      const newSelectedNodes: { node: Node; path: number[]; }[] = [];
+      for (let i = startIndex+1; i <= endIndex; i++) {
+        const result = getNodeAtPath({
+          treeData,
+          path: [i],
+          getNodeKey: ({ treeIndex }) => treeIndex,
+        });
+
+        if (result && result.node && result.treeIndex) {
+          newSelectedNodes.push({ node: result.node as Node, path: [result.treeIndex] as number[] });
+        }
+
       }
-    });
-  }
+  
+      setSelectedNodes((prev)=>{
+        return [...prev, ...newSelectedNodes]
+      });
+    } else {
+      setSelectedNodes((prev) => {
+        const nodeExists = prev.some(
+          (item) => item.node === node && JSON.stringify(item.path) === JSON.stringify(path)
+        );
+  
+        if (nodeExists) {
+          return prev.filter(
+            (item) => item.node !== node || JSON.stringify(item.path) !== JSON.stringify(path)
+          );
+        } else {
+          return [...prev, { node, path }];
+        }
+      });
+      setLastSelectedIndex(treeIndex);
+    }
+  };
 
   return (
     <div style={{ display: 'flex' }}>
@@ -314,9 +344,9 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
           onMoveNode={({ treeData, node, nextTreeIndex }: NodeMoveEvent) => {
             handleOpenModal(node, treeData, nextTreeIndex);
           }}
-          generateNodeProps={({node, path}) => ({
-            onClick: () => {
-              handleOnNodeClick(node, path)
+          generateNodeProps={({node, path, treeIndex}) => ({
+            onClick: (event: React.MouseEvent) => {
+              handleOnNodeClick(event, node, path, treeIndex)
             },  
             className: `anchor-menu__item ${isNodeHighlighted(node, path)? "selectedHighlight" : ""}`,
             title: (
