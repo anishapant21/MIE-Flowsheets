@@ -155,7 +155,8 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     handleCloseModal();
   };
 
-  const handleOnDuplicate = (node: Node, path: number[]) => {
+  const handleOnDuplicate = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, node: Node, path: number[]) => {
+    event.stopPropagation();
     const newNode = { ...node, title: `${node.title} (Copy)` };
 
     const result = insertNode({
@@ -168,6 +169,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
 
     if (result && result.treeData) {
       setTreeData(result.treeData);
+      setUpdatedTreeData(result.treeData)
     }
   };
 
@@ -357,7 +359,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
             ),
             buttons: [
               <>
-                <button onClick={() => handleOnDuplicate(node, path)} className='icon-btn'>
+                <button onClick={(e) => handleOnDuplicate(e, node, path)} className='icon-btn'>
                   <i className="bi bi-copy"></i>
                 </button>
                 <button onClick={() => handleOnDelete(path)} className='icon-btn'>
