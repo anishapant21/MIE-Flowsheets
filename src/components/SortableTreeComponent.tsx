@@ -232,8 +232,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
       setUpdatedTreeData(result.treeData)
     }
   };
-
-  console.log("SELECTED NODES", selectedNodes)
+  
   const getDisplayItem = (type: any) => {
     if (type === "string") {
       return <input placeholder="Enter a value" disabled />;
@@ -352,8 +351,14 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     // select multiple nodes by clicking on shift and node
     if (event.shiftKey && lastSelectedIndex !== null) {
       // Select range of nodes between lastSelectedIndex and treeIndex
-      const startIndex = Math.min(lastSelectedIndex, treeIndex);
-      const endIndex = Math.max(lastSelectedIndex, treeIndex);
+      let startIndex = Math.min(lastSelectedIndex, treeIndex);
+      let endIndex = Math.max(lastSelectedIndex, treeIndex);
+
+      // handle cases for reverse mode - lastSelectedIndex is the first one and treeIndex is the second one
+      if(lastSelectedIndex > treeIndex){
+        startIndex = startIndex-1;
+        endIndex = endIndex -1
+      }
   
       const newSelectedNodes: { node: Node; path: number[]; }[] = [];
       for (let i = startIndex+1; i <= endIndex; i++) {
