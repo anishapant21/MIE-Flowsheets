@@ -6,7 +6,7 @@ import { SortableTreeWithoutDndContext as SortableTree } from '@nosferatu500/rea
 import InputModal from './InputModalComponent';
 
 import { IQuestionnaireItemType, Node } from '../types/types';
-import { insertNodeAtPosition } from '../utils/treeHandler';
+import { calculatePositionChange, insertNodeAtPosition } from '../utils/treeHandler';
 
 interface SortableTreeProps {
   treeData: TreeItem[];
@@ -69,56 +69,116 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
 
   const handleMultipleMove = (node: Node, treeData: TreeItem[], nextTreeIndex: number) => {
     let newTreeData = [...updatedTreeData];
-  
-    // Sort selected nodes by their path in descending order
-    const sortedSelectedNodes = [...selectedNodes].sort((a, b) => {
-      for (let i = 0; i < a.path.length; i++) {
-        if (a.path[i] !== b.path[i]) {
-          return b.path[i] - a.path[i];
+
+    const positionDifference = calculatePositionChange(updatedTreeData, treeData, node)
+    const insertAt = positionDifference && positionDifference >0? nextTreeIndex+1 : nextTreeIndex
+
+
+   
+        if(positionDifference && positionDifference > 0) {
+               // Insert selected items in the dropped position
+        const sortedSelectedNodesForInsertion = [...selectedNodes].sort((a, b) => {
+          for (let i = 0; i < a.path.length; i++) {
+            if (a.path[i] !== b.path[i]) {
+              return a.path[i] - b.path[i];
+            }
+          }
+          return 0;
+        });
+      
+        // Insert each node into the new position
+        sortedSelectedNodesForInsertion.forEach(({ node }, index) => {
+          const result = insertNode({
+            treeData: newTreeData,
+            newNode: node,
+            depth: 0,
+            minimumTreeIndex: (insertAt) + index,
+            getNodeKey: ({ treeIndex }) => treeIndex,
+          });
+      
+          if (result && result.treeData) {
+            newTreeData = result.treeData;
+          }
+        });
+
+            // Sort selected nodes by their path in descending order
+      const sortedSelectedNodes = [...selectedNodes].sort((a, b) => {
+        for (let i = 0; i < a.path.length; i++) {
+          if (a.path[i] !== b.path[i]) {
+            return b.path[i] - a.path[i];
+          }
         }
-      }
-      return 0;
-    });
-  
-    // Remove all selected nodes from their original positions
-    sortedSelectedNodes.forEach(({ node, path }) => {
-      const result = removeNode({
-        treeData: newTreeData,
-        path,
-        getNodeKey: ({ treeIndex }) => treeIndex,
+        return 0;
+      });
+    
+      // Remove all selected nodes from their original positions
+      sortedSelectedNodes.forEach(({ node, path }) => {
+        const result = removeNode({
+          treeData: newTreeData,
+          path,
+          getNodeKey: ({ treeIndex }) => treeIndex,
+        });
+    
+        if (result && result.treeData) {
+          newTreeData = result.treeData;
+        }
+      });
+
+
+
+        } else{
+
+             // Sort selected nodes by their path in descending order
+      const sortedSelectedNodes = [...selectedNodes].sort((a, b) => {
+        for (let i = 0; i < a.path.length; i++) {
+          if (a.path[i] !== b.path[i]) {
+            return b.path[i] - a.path[i];
+          }
+        }
+        return 0;
+      });
+    
+      // Remove all selected nodes from their original positions
+      sortedSelectedNodes.forEach(({ node, path }) => {
+        const result = removeNode({
+          treeData: newTreeData,
+          path,
+          getNodeKey: ({ treeIndex }) => treeIndex,
+        });
+    
+        if (result && result.treeData) {
+          newTreeData = result.treeData;
+        }
       });
   
-      if (result && result.treeData) {
-        newTreeData = result.treeData;
-      }
-    });
+        // Insert selected items in the dropped position
+        const sortedSelectedNodesForInsertion = [...selectedNodes].sort((a, b) => {
+          for (let i = 0; i < a.path.length; i++) {
+            if (a.path[i] !== b.path[i]) {
+              return a.path[i] - b.path[i];
+            }
+          }
+          return 0;
+        });
+      
+        // Insert each node into the new position
+        sortedSelectedNodesForInsertion.forEach(({ node }, index) => {
+          const result = insertNode({
+            treeData: newTreeData,
+            newNode: node,
+            depth: 0,
+            minimumTreeIndex: (insertAt) + index,
+            getNodeKey: ({ treeIndex }) => treeIndex,
+          });
+      
+          if (result && result.treeData) {
+            newTreeData = result.treeData;
+          }
+        });
 
-    // Insert selected items in the dropped position
-    const sortedSelectedNodesForInsertion = [...selectedNodes].sort((a, b) => {
-      for (let i = 0; i < a.path.length; i++) {
-        if (a.path[i] !== b.path[i]) {
-          return a.path[i] - b.path[i];
+
         }
-      }
-      return 0;
-    });
 
-  
-    // Insert each node into the new position
-    sortedSelectedNodesForInsertion.forEach(({ node }, index) => {
-      const result = insertNode({
-        treeData: newTreeData,
-        newNode: node,
-        depth: 0,
-        minimumTreeIndex: nextTreeIndex + index,
-        getNodeKey: ({ treeIndex }) => treeIndex,
-      });
-  
-      if (result && result.treeData) {
-        newTreeData = result.treeData;
-      }
-    });
-  
     setTreeData(newTreeData);
     setUpdatedTreeData(newTreeData)
     setSelectedNodes([])
@@ -173,6 +233,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     }
   };
 
+  console.log("SELECTED NODES", selectedNodes)
   const getDisplayItem = (type: any) => {
     if (type === "string") {
       return <input placeholder="Enter a value" disabled />;
