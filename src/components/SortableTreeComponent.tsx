@@ -256,8 +256,8 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   };
 
   return (
-    <div style={{ display: 'flex' }}>
-      <div>
+    <div className='container'>
+      <div className='elements-container'>
         {createTypeComponent(IQuestionnaireItemType.string, 'Text/Input')}
         {createTypeComponent(IQuestionnaireItemType.choice, 'Dropdown')}
         {createTypeComponent(IQuestionnaireItemType.date, 'Date')}
@@ -274,7 +274,18 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
           }}
           generateNodeProps={({ node, path, treeIndex }) => ({
             onClick: (event: React.MouseEvent) => {
-              handleOnNodeClick(event, node, path, treeIndex)
+              event.stopPropagation();
+              const target = event.target as HTMLElement;
+              const clickedItemClassName = target.className;
+              
+              if (
+                  clickedItemClassName !== 'rstcustom__expandButton' &&
+                  clickedItemClassName !== 'rst__collapseButton'
+              ) {
+              
+                   handleOnNodeClick(event, node, path, treeIndex)
+              }
+    
             },
             className: `anchor-menu__item ${isNodeHighlighted(node, path) ? "selectedHighlight" : ""}`,
             title: (
