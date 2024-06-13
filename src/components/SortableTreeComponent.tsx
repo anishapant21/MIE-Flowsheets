@@ -71,9 +71,6 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   const handleMultipleMove = (node: Node, treeData: TreeItem[], nextTreeIndex: number, nextPath: number[]) => {
     let newTreeData = [...updatedTreeData];
 
-    console.log("SELECTED NODES", selectedNodes)
-    console.log("NEW TREE DATA BEFORE UPDATION", newTreeData)
-
     // positionDifference is to check weather the items is being dropped from top to bottom or bottom to top
     // It affects the treeData and items paths
     const positionDifference = calculatePositionChange(updatedTreeData, treeData, node)
@@ -98,9 +95,6 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     setCurrentNode(null);
     setCurrentPath(null);
   };
-
-  console.log("ALWAYS AN UPDATED TREEDATA", updatedTreeData)
-  console.log("TREEDATA", treeData)
 
   const handleSaveLabel = (label: string) => {
     if (currentNode && currentPath) {
@@ -200,7 +194,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
 
   const handleOnSettings = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, node: Node, path: number[]) => {
     e.stopPropagation();
-    
+
     setCurrentNode(node);
     setIsModalOpen(true);
     setEditValue(node.title);
