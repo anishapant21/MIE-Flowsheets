@@ -256,8 +256,8 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
   };
 
   return (
-    <div style={{ display: 'flex' }}>
-      <div>
+    <div className='container'>
+      <div className='elements-container'>
         {createTypeComponent(IQuestionnaireItemType.string, 'Text/Input')}
         {createTypeComponent(IQuestionnaireItemType.choice, 'Dropdown')}
         {createTypeComponent(IQuestionnaireItemType.date, 'Date')}

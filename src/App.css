@@ -172,3 +172,34 @@
 
     }    
   }
+
+  .container{
+    display: flex;
+  }
+
+  @media (max-width: 768px) {
+    #root {
+      padding: 1rem;
+    }
+    
+    .container {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .sortable-tree-container{
+      width: 300px;
+      margin-top: 20px;
+    }
+
+    .rst__rowWrapper{
+      min-width: 300px;
+    }
+
+    .rst__node{
+      .rst__nodeContent{
+        left: 0 !important;
+      }
+
+    }
+  }
