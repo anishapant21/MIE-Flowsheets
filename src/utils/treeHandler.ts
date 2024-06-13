@@ -1,33 +1,19 @@
-import { GetTreeItemChildrenFn, TreeItem, insertNode } from "@nosferatu500/react-sortable-tree";
-import { Node } from "../types/types";
-import { ReactNode } from "react";
+import { TreeItem, insertNode, removeNode } from "@nosferatu500/react-sortable-tree";
+import { Node, TreeItems } from "../types/types";
 
-export const insertNodeAtPosition = (node: Node, treeData : TreeItem [], index : number) =>{
-    const result = insertNode({
-        treeData: treeData,
-        newNode: node,
-        depth: 0,
-        minimumTreeIndex: index,
-        getNodeKey: ({ treeIndex }) => treeIndex,
-      });
-
-
-      if (result && result.treeData) {
-        return result.treeData;
-      }
-
-}
+export const insertNodeAtPosition = (node: Node, treeData: TreeItem[], index: number) => {
+  const result = insertNode({
+    treeData: treeData,
+    newNode: node,
+    depth: 0,
+    minimumTreeIndex: index,
+    getNodeKey: ({ treeIndex }) => treeIndex,
+  });
 
 
-// Assuming TreeItem is already defined
-export interface TreeItems {
-  title?: ReactNode | undefined;
-  subtitle?: ReactNode | undefined;
-  expanded?: boolean | undefined;
-  children?: TreeItem[] | GetTreeItemChildrenFn | undefined;
-  nodeType?: string;
-  nodeReadableType?: string;
-  [x: string]: any;
+  if (result && result.treeData) {
+    return result.treeData;
+  }
 }
 
 export const calculatePositionChange = (updatedTreeData: TreeItems[], treeData: TreeItems[], node: TreeItem): number | null => {
@@ -42,7 +28,6 @@ export const calculatePositionChange = (updatedTreeData: TreeItems[], treeData: 
   updatedTreeData.forEach((item, index) => {
     if (item.title) {
       titleToIndexMap.set(item.title.toString(), index);
-      console.log(`Mapped title: ${item.title} to index: ${index}`);
     }
   });
 
@@ -51,9 +36,7 @@ export const calculatePositionChange = (updatedTreeData: TreeItems[], treeData: 
     const item = treeData[index];
     if (item.title && item.title.toString() === nodeTitle) {
       const originalIndex = titleToIndexMap.get(nodeTitle);
-      console.log(`Checking title: ${nodeTitle} at index: ${index}, originalIndex: ${originalIndex}`);
       if (originalIndex !== undefined && originalIndex !== index) {
-        console.log(`Title: ${nodeTitle} moved from ${originalIndex} to ${index}`);
         return index - originalIndex;
       }
     }
@@ -61,3 +44,85 @@ export const calculatePositionChange = (updatedTreeData: TreeItems[], treeData: 
 
   return null;
 };
+
+export interface SelectedNodes {
+  node: Node,
+  path: number[]
+}
+
+// Inserts multiple nodes in a given treeData starting at given index
+export const multiNodeInsertion = (treeData: TreeItem[], selectedNodes: SelectedNodes[], insertNodeIndex: number) => {
+  let newTreeData = [...treeData];
+
+  const sortedSelectedNodesForInsertion = [...selectedNodes].sort((a, b) => {
+    for (let i = 0; i < a.path.length; i++) {
+      if (a.path[i] !== b.path[i]) {
+        return a.path[i] - b.path[i];
+      }
+    }
+    return 0;
+  });
+
+  // Insert each node into the new position
+  sortedSelectedNodesForInsertion.forEach(({ node }, index) => {
+    const result = insertNode({
+      treeData: newTreeData,
+      newNode: node,
+      depth: 0,
+      minimumTreeIndex: (insertNodeIndex) + index,
+      getNodeKey: ({ treeIndex }) => treeIndex,
+    });
+
+    if (result && result.treeData) {
+      newTreeData = result.treeData;
+    }
+  });
+
+  return newTreeData;
+
+}
+
+// Deletes multiple nodes in a given treeData at given path
+export const multiNodeDeletion = (treeData: TreeItem[], selectedNodes: SelectedNodes[]) => {
+  let newTreeData = [...treeData];
+
+  // Sort selected nodes by their path in descending order
+  const sortedSelectedNodes = [...selectedNodes].sort((a, b) => {
+    for (let i = 0; i < a.path.length; i++) {
+      if (a.path[i] !== b.path[i]) {
+        return b.path[i] - a.path[i];
+      }
+    }
+    return 0;
+  });
+
+  // Remove all selected nodes from their original positions
+  sortedSelectedNodes.forEach(({ path }) => {
+    const result = removeNode({
+      treeData: newTreeData,
+      path,
+      getNodeKey: ({ treeIndex }) => treeIndex,
+    });
+
+    if (result && result.treeData) {
+      newTreeData = result.treeData;
+    }
+  });
+
+  return newTreeData;
+}
+
+export const singleNodeDeletion = (treeData: TreeItem[], path: number[]) => {
+  let newtreeData = [...treeData]
+  const result = removeNode({
+    treeData,
+    path,
+    getNodeKey: ({ treeIndex }) => treeIndex,
+  });
+
+  if (result && result.treeData) {
+    newtreeData = result.treeData
+  }
+
+  return newtreeData;
+}
