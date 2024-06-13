@@ -28,7 +28,6 @@ export const calculatePositionChange = (updatedTreeData: TreeItems[], treeData: 
   updatedTreeData.forEach((item, index) => {
     if (item.title) {
       titleToIndexMap.set(item.title.toString(), index);
-      console.log(`Mapped title: ${item.title} to index: ${index}`);
     }
   });
 
@@ -37,9 +36,7 @@ export const calculatePositionChange = (updatedTreeData: TreeItems[], treeData: 
     const item = treeData[index];
     if (item.title && item.title.toString() === nodeTitle) {
       const originalIndex = titleToIndexMap.get(nodeTitle);
-      console.log(`Checking title: ${nodeTitle} at index: ${index}, originalIndex: ${originalIndex}`);
       if (originalIndex !== undefined && originalIndex !== index) {
-        console.log(`Title: ${nodeTitle} moved from ${originalIndex} to ${index}`);
         return index - originalIndex;
       }
     }
