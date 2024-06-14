@@ -74,11 +74,11 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
 
     // If top to bottom first insertion and deletion and vice-versa
     if (positionDifference && positionDifference > 0) {
-      newTreeData = multiNodeInsertion(newTreeData, selectedNodes, insertAt)
+      newTreeData = multiNodeInsertion(newTreeData, selectedNodes, insertAt, nextPath)
       newTreeData = multiNodeDeletion(newTreeData, selectedNodes)
     } else {
       newTreeData = multiNodeDeletion(newTreeData, selectedNodes)
-      newTreeData = multiNodeInsertion(newTreeData, selectedNodes, insertAt)
+      newTreeData = multiNodeInsertion(newTreeData, selectedNodes, insertAt, nextPath)
     }
 
     setTreeData(newTreeData);

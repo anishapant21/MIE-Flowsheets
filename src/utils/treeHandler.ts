@@ -51,8 +51,12 @@ export interface SelectedNodes {
 }
 
 // Inserts multiple nodes in a given treeData starting at given index
-export const multiNodeInsertion = (treeData: TreeItem[], selectedNodes: SelectedNodes[], insertNodeIndex: number) => {
+export const multiNodeInsertion = (treeData: TreeItem[], selectedNodes: SelectedNodes[], insertNodeIndex: number, nextPath : number []) => {
   let newTreeData = [...treeData];
+
+  let insertionTreeIndex = (index: number) =>{
+    return nextPath.length > 1? insertNodeIndex : insertNodeIndex + index
+  }
 
   const sortedSelectedNodesForInsertion = [...selectedNodes].sort((a, b) => {
     for (let i = 0; i < a.path.length; i++) {
@@ -68,8 +72,8 @@ export const multiNodeInsertion = (treeData: TreeItem[], selectedNodes: Selected
     const result = insertNode({
       treeData: newTreeData,
       newNode: node,
-      depth: 0,
-      minimumTreeIndex: (insertNodeIndex) + index,
+      depth: nextPath.length - 1,
+      minimumTreeIndex: insertionTreeIndex(index),
       getNodeKey: ({ treeIndex }) => treeIndex,
     });
 
