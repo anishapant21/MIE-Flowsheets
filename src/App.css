@@ -218,7 +218,7 @@
   }
 
 .title{
-  margin-left: 10em;
+  /* margin-left: 10em; */
   display: flex;
 }
 
@@ -247,3 +247,28 @@
   .bi-x{
     cursor: pointer;
   }
+
+  .header-wrapper {
+    position: absolute;
+    top: 55px;
+    left: 25em;
+    width: 400px;
+    z-index: 1000;
+    background-color: white; /* Ensure the header has a background color to cover content underneath */
+    z-index: 0;
+  }
+  
+  .header-wrapper.d-none {
+    display: none;
+  }
+  
+  .items-selected, .delete-multiple {
+    display: inline-block;
+    margin: 0 10px;
+  }
+  
+  .container {
+    position: relative;
+    padding-top: 50px; /* Adjust this to make room for the header */
+  }
+  
