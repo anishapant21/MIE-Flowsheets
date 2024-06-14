@@ -203,3 +203,47 @@
 
     }
   }
+
+  .rst__rowLandingPad{
+    display: block;
+  }
+
+  .header-wrapper{
+    width: 34em;
+    margin-left: 3em;
+    margin-bottom: 2em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+.title{
+  margin-left: 10em;
+  display: flex;
+}
+
+.items-selected{
+  font-weight: 600;
+}
+
+  .delete-multiple{
+    width:90px;
+    border: 1px solid rgb(239, 16, 16);
+    border-radius: 8px;
+    padding: 4px;
+    cursor: pointer;
+  }
+
+  .d-none{
+    display: none;
+  }
+
+  .bi-trash{
+    color: red;
+    margin-right: 3px;
+
+  }
+
+  .bi-x{
+    cursor: pointer;
+  }
