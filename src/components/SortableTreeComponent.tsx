@@ -92,6 +92,23 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     setCurrentPath(null);
   };
 
+  const updateNodeTitle = (node: TreeItem, currentNodeTitle: string, newLabel: string): TreeItem => {
+    if (node.title === currentNodeTitle) {
+      return { ...node, title: newLabel };
+    }
+
+    if (Array.isArray(node.children)) {
+      return {
+        ...node,
+        children: node.children.map((child) =>
+          updateNodeTitle(child, currentNodeTitle, newLabel)
+        ),
+      };
+    }
+
+    return node;
+  };
+
   const handleSaveLabel = (label: string) => {
     if (currentNode && currentPath) {
       const newTreeData = changeNodeAtPath({
@@ -105,12 +122,10 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
       // Updating this so that updatedTreeData is updated with treeData once saved
       setUpdatedTreeData(newTreeData)
     } else if (currentNode) {
-      const newTreeData = updatedTreeData.map((node) => {
-        if (node.title === currentNode.title) {
-          return { ...node, title: label };
-        }
-        return node;
-      });
+
+      const newTreeData = updatedTreeData.map((node: TreeItem) =>
+        updateNodeTitle(node, currentNode.title, label)
+      );
       setTreeData(newTreeData);
       setUpdatedTreeData(newTreeData)
     }
@@ -261,7 +276,7 @@ const SortableTreeComponent: React.FC<SortableTreeProps> = ({ treeData, setTreeD
     <div>
       <div className={`header-wrapper ${selectedNodes.length > 0 ? "" : "d-none"}`}>
         <div className='title'>
-          <svg onClick={()=> setSelectedNodes([])} xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-x" viewBox="0 0 16 16">
+          <svg onClick={() => setSelectedNodes([])} xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-x" viewBox="0 0 16 16">
             <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
           </svg>
 
