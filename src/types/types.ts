@@ -9,6 +9,7 @@ export enum IQuestionnaireItemType {
   }
   
  export interface Node {
+    linkId: string;
     title: string;
     hierarchy?: string;
     nodeType?: IQuestionnaireItemType;
